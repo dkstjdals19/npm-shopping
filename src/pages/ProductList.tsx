@@ -6,13 +6,20 @@ export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const categories = ['All', ...new Set(products.map(p=> p.category))]
+  
   const addToCart = (product: Product) => {
     const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
     existingCart.push(product);
     localStorage.setItem("cart", JSON.stringify(existingCart));
     alert(`${product.title}이(가) 장바구니에 담겼습니다!`);
   };
+  
+  const filteredProducts = products
+    .filter(product => product.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter(product=>selectedCategory === "All" || product.category === selectedCategory);
 
   useEffect(() => {
     fetch("https://fakestoreapi.com/products")
@@ -36,10 +43,21 @@ export default function ProductList() {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">상품 목록</h2>
+      <div className="flex justify-between">
+        <h2 className="text-2xl font-bold mb-4">상품 목록</h2>
+        <div>
+        <input type="text" placeholder="상품을 검색하세요..." onChange={(e)=>setSearchTerm(e.target.value)} className=" p-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"/>
+        <select  onChange={(e)=>setSelectedCategory(e.target.value)}className="p-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+          <option value="All">전체</option>
+          <option value="electronics">전자제품</option>
+          <option value="men's clothing">남성 의류</option>
+          <option value="women's clothing">여성 의류</option>
+        </select>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-fr">
-        {products.map((product) => (
+        {filteredProducts.map((product) => (
           <div
             key={product.id}
             className="flex flex-col border rounded-lg shadow hover:shadow-lg transition p-4"
@@ -76,6 +94,7 @@ export default function ProductList() {
           </div>
         ))}
       </div>
+
 
       {/* 모달 */}
       {selectedProduct && (
